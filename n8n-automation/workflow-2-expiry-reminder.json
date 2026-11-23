@@ -1,0 +1,95 @@
+{
+  "name": "BL Gym - 2. Expiry Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }]
+        },
+        "options": { "timezone": "Asia/Kolkata" }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 9 AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getRows",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "options": { "headerRow": 1 }
+      },
+      "id": "sheets-get-all",
+      "name": "Get All Members",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [480, 300],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter members who need reminders (3 days before or on expiry day)\nconst REMIND_DAYS = [3, 0];\nconst today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in Asia/Kolkata\n\nconst results = [];\nfor (const item of $input.all()) {\n  const row = item.json;\n  if (!row.expiry_date || !row.phone) continue;\n  if (row.payment_status === 'Paid' && row.expiry_date > today) {\n    // Active, check days to expiry\n    const expiry = new Date(row.expiry_date + 'T00:00:00');\n    const todayDate = new Date(today + 'T00:00:00');\n    const daysLeft = Math.round((expiry - todayDate) / (1000 * 60 * 60 * 24));\n    if (!REMIND_DAYS.includes(daysLeft)) continue;\n    // Avoid duplicate: skip if already reminded today\n    if (row.last_reminder_date === today) continue;\n    results.push({ json: { ...row, days_left: daysLeft, today } });\n  } else if (row.expiry_date === today || row.expiry_date < today) {\n    // Expired today or already expired\n    if (row.last_reminder_date === today) continue;\n    results.push({ json: { ...row, days_left: 0, today } });\n  }\n}\nreturn results;\n"
+      },
+      "id": "code-filter",
+      "name": "Filter Members Needing Reminder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "REPLACE_WITH_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "messageType": "template",
+        "template": {
+          "name": "gym_expiry_reminder",
+          "language": "en",
+          "components": {
+            "values": [
+              { "type": "body", "parameters": { "values": [
+                { "type": "text", "text": "={{ $json.name }}" },
+                { "type": "text", "text": "={{ $json.expiry_date }}" },
+                { "type": "text", "text": "={{ $json.days_left === 0 ? 'aaj' : $json.days_left + ' din mein' }}" }
+              ]}}
+            ]
+          }
+        }
+      },
+      "id": "wa-reminder",
+      "name": "Send WhatsApp Reminder",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [960, 300],
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_CREDENTIAL_ID", "name": "WhatsApp Account" }}
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": { "last_reminder_date": "={{ $json.today }}" }
+        },
+        "matchingColumns": ["phone"],
+        "options": {}
+      },
+      "id": "sheets-update-reminder",
+      "name": "Update last_reminder_date",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1200, 300],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    }
+  ],
+  "connections": {
+    "Daily 9 AM Trigger": { "main": [[{ "node": "Get All Members", "type": "main", "index": 0 }]] },
+    "Get All Members": { "main": [[{ "node": "Filter Members Needing Reminder", "type": "main", "index": 0 }]] },
+    "Filter Members Needing Reminder": { "main": [[{ "node": "Send WhatsApp Reminder", "type": "main", "index": 0 }]] },
+    "Send WhatsApp Reminder": { "main": [[{ "node": "Update last_reminder_date", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateId": "bl-gym-workflow-2" }
+}

@@ -284,7 +284,7 @@ export default function Home() {
         padding: '3rem 0',
       }}>
         <div className="container">
-          <div style={{
+          <div className="stats-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '2rem',
@@ -295,7 +295,7 @@ export default function Home() {
             <Stat value="5+" label="Years Serving" />
           </div>
         </div>
-        <style>{`@media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)!important}}`}</style>
+        <style>{`@media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:1.25rem!important}}`}</style>
       </section>
 
       {/* =========================================================
@@ -324,7 +324,9 @@ export default function Home() {
       ========================================================= */}
       <section className="section" style={{ background: 'var(--bg-surface)' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}
+            className="equipment-grid">
+<style>{`@media(max-width:900px){.equipment-grid{grid-template-columns:1fr!important;gap:2rem!important}}`}</style>
             <div>
               <div className="section-label">Equipment</div>
               <h2 className="section-title">World-Class Gear</h2>
@@ -353,51 +355,110 @@ export default function Home() {
               </Link>
             </div>
             <div>
-              {/* Visual placeholder with gym atmosphere */}
+              {/* Equipment visual card */}
               <div style={{
                 aspectRatio: '4/3',
                 background: 'var(--bg-card)',
                 borderRadius: '12px',
                 border: '1px solid var(--border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: '1rem',
-                position: 'relative',
                 overflow: 'hidden',
+                position: 'relative',
               }}>
+                {/* Background gradient */}
                 <div style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, transparent 50%, rgba(220,38,38,0.04) 100%)',
+                  background: 'linear-gradient(135deg, rgba(220,38,38,0.12) 0%, rgba(8,8,8,0.9) 50%, rgba(220,38,38,0.06) 100%)',
                 }} />
+                {/* Equipment grid inside */}
                 <div style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '5rem',
-                  fontWeight: 900,
-                  color: 'rgba(220,38,38,0.1)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  textAlign: 'center',
-                  lineHeight: 0.9,
-                  position: 'relative',
-                  zIndex: 1,
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1px',
+                  background: 'var(--border)',
                 }}>
-                  BODY<br />LINE
+                  {[
+                    { icon: 'DB', label: 'Free Weights' },
+                    { icon: 'BX', label: 'Boxing Zone' },
+                    { icon: 'CB', label: 'Cable Machines' },
+                    { icon: '24', label: 'Open 24/7' },
+                  ].map(eq => (
+                    <div key={eq.label} style={{
+                      background: 'var(--bg-card)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: '1.5rem',
+                    }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        background: 'rgba(220,38,38,0.12)',
+                        border: '1px solid rgba(220,38,38,0.3)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 900,
+                        fontSize: '0.8rem',
+                        color: 'var(--primary)',
+                      }}>
+                        {eq.icon}
+                      </div>
+                      <span style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: 'var(--text-secondary)',
+                      }}>
+                        {eq.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
+                {/* Bottom strip */}
                 <div style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  padding: '1rem 1.5rem',
+                  background: 'linear-gradient(to top, rgba(8,8,8,0.95), transparent)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}>
+                  <span style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: 'var(--text-primary)',
+                  }}>
+                    Body Line Fitness
+                  </span>
                   <a
                     href={BUSINESS.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-outline btn-sm"
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--primary)',
+                      textDecoration: 'none',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                    }}
                   >
-                    View Gym Photos on Maps
+                    See on Maps &rarr;
                   </a>
                 </div>
               </div>

@@ -1,0 +1,95 @@
+{
+  "name": "BL Gym - 4. Daily Owner Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }]
+        },
+        "options": { "timezone": "Asia/Kolkata" }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 8 AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getRows",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "options": { "headerRow": 1 }
+      },
+      "id": "sheets-get-all",
+      "name": "Get All Members",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [480, 300],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build daily report summary\nconst today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD\nconst rows = $input.all().map(i => i.json);\n\nlet active = 0, expired = 0, expiringSoon = 0, pending = 0;\nlet expiringNames = [];\nlet expiredNames = [];\nlet pendingNames = [];\nlet totalFeeThisMonth = 0;\n\nconst thisMonth = today.slice(0, 7); // YYYY-MM\n\nfor (const r of rows) {\n  if (!r.expiry_date) continue;\n  \n  const daysLeft = Math.round((new Date(r.expiry_date + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);\n  \n  if (r.payment_status === 'Pending') {\n    pending++;\n    pendingNames.push(r.name + ' (' + r.phone.slice(-4) + ')');\n  } else if (daysLeft < 0) {\n    expired++;\n    expiredNames.push(r.name + ' (' + r.phone.slice(-4) + ')');\n  } else {\n    active++;\n    if (daysLeft <= 5) {\n      expiringSoon++;\n      expiringNames.push(r.name + ' - ' + r.expiry_date + ' (' + daysLeft + 'd)');\n    }\n  }\n  \n  if ((r.last_payment_date || '').startsWith(thisMonth)) {\n    totalFeeThisMonth += parseFloat(r.fee || 0);\n  }\n}\n\nconst report = [\n  '*Body Line Fitness Center - Daily Report*',\n  'Date: ' + today,\n  '',\n  'Total Members: ' + rows.length,\n  'Active: ' + active,\n  'Expired: ' + expired,\n  'Pending Payment: ' + pending,\n  'Expiring in 5 days: ' + expiringSoon,\n  'Revenue This Month: Rs ' + totalFeeThisMonth,\n  '',\n  expiringSoon > 0 ? ('Expiring Soon:\\n' + expiringNames.join('\\n')) : '',\n  expired > 0 ? ('Expired Members:\\n' + expiredNames.slice(0,5).join('\\n') + (expiredNames.length > 5 ? '... +' + (expiredNames.length-5) + ' more' : '')) : '',\n  pending > 0 ? ('Pending Payment:\\n' + pendingNames.slice(0,5).join('\\n')) : ''\n].filter(Boolean).join('\\n');\n\nreturn [{ json: { report, today, active, expired, pending, expiringSoon, totalFeeThisMonth } }];\n"
+      },
+      "id": "code-report",
+      "name": "Build Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_OWNER_EMAIL@gmail.com",
+        "subject": "=Body Line Gym - Daily Report {{ $json.today }}",
+        "emailType": "text",
+        "message": "={{ $json.report }}"
+      },
+      "id": "gmail-report",
+      "name": "Email Report to Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [960, 220],
+      "credentials": { "gmailOAuth2": { "id": "REPLACE_CREDENTIAL_ID", "name": "Gmail Account" }}
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "REPLACE_WITH_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "REPLACE_WITH_OWNER_WHATSAPP_NUMBER",
+        "messageType": "template",
+        "template": {
+          "name": "gym_daily_report",
+          "language": "en",
+          "components": {
+            "values": [
+              { "type": "body", "parameters": { "values": [
+                { "type": "text", "text": "={{ $json.today }}" },
+                { "type": "text", "text": "={{ $json.active }}" },
+                { "type": "text", "text": "={{ $json.expired }}" },
+                { "type": "text", "text": "={{ $json.expiringSoon }}" }
+              ]}}
+            ]
+          }
+        }
+      },
+      "id": "wa-report",
+      "name": "WhatsApp Report (Optional)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [960, 420],
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_CREDENTIAL_ID", "name": "WhatsApp Account" }},
+      "continueOnFail": true,
+      "notes": "OPTIONAL: Use this OR Gmail, not both. Requires approved gym_daily_report template on Meta."
+    }
+  ],
+  "connections": {
+    "Daily 8 AM Trigger": { "main": [[{ "node": "Get All Members", "type": "main", "index": 0 }]] },
+    "Get All Members": { "main": [[{ "node": "Build Report", "type": "main", "index": 0 }]] },
+    "Build Report": { "main": [[
+      { "node": "Email Report to Owner", "type": "main", "index": 0 },
+      { "node": "WhatsApp Report (Optional)", "type": "main", "index": 0 }
+    ]]}
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateId": "bl-gym-workflow-4" }
+}

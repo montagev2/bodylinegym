@@ -1,0 +1,163 @@
+{
+  "name": "BL Gym - 3. Payment Update (Razorpay Webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bl-gym-payment",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Razorpay Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "bl-gym-payment-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "event-check",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "payment_link.paid",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-payment",
+      "name": "Is payment_link.paid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract payment details from Razorpay webhook body\nconst body = $input.first().json.body;\nconst paymentLink = body.payload?.payment_link?.entity || {};\nconst payment = body.payload?.payment?.entity || {};\n\nconst memberId = paymentLink.reference_id || '';\nconst amountPaid = (payment.amount || 0) / 100; // paise to rupees\nconst paymentRef = payment.id || '';\nconst paymentDate = new Date().toISOString().slice(0,10);\n\nreturn [{ json: { member_id: memberId, amount_paid: amountPaid, payment_ref: paymentRef, payment_date: paymentDate } }];\n"
+      },
+      "id": "code-extract",
+      "name": "Extract Payment Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 220]
+    },
+    {
+      "parameters": {
+        "operation": "getRows",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "filters": {
+          "conditions": [
+            { "leftValue": "member_id", "operator": { "type": "string", "operation": "equals" }, "rightValue": "={{ $('Extract Payment Info').item.json.member_id }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sheets-find-member",
+      "name": "Find Member by ID",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 220],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compute new expiry date and check idempotency\nconst paymentInfo = $('Extract Payment Info').item.json;\nconst member = $input.first().json;\n\n// Idempotency: skip if same payment already processed\nif (member.last_payment_ref === paymentInfo.payment_ref) {\n  return [{ json: { skip: true, reason: 'Already processed: ' + paymentInfo.payment_ref } }];\n}\n\nconst today = paymentInfo.payment_date;\nconst currentExpiry = member.expiry_date || today;\n\n// Extend from current expiry if still active, else from today\nconst baseDate = currentExpiry >= today ? currentExpiry : today;\n\nfunction addMonths(dateStr, n) {\n  const d = new Date(dateStr + 'T00:00:00');\n  d.setMonth(d.getMonth() + n);\n  return d.toISOString().slice(0,10);\n}\n\nconst planMonths = parseInt(member.plan_months || 1);\nconst newExpiry = addMonths(baseDate, planMonths);\n\nreturn [{\n  json: {\n    skip: false,\n    phone: member.phone,\n    member_id: member.member_id,\n    name: member.name,\n    new_expiry: newExpiry,\n    payment_status: 'Paid',\n    last_payment_date: today,\n    last_payment_ref: paymentInfo.payment_ref,\n    amount_paid: paymentInfo.amount_paid\n  }\n}];\n"
+      },
+      "id": "code-compute-expiry",
+      "name": "Compute New Expiry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-skip",
+      "name": "Skip if Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1440, 220]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "payment_status": "={{ $json.payment_status }}",
+            "expiry_date": "={{ $json.new_expiry }}",
+            "last_payment_date": "={{ $json.last_payment_date }}",
+            "last_payment_ref": "={{ $json.last_payment_ref }}"
+          }
+        },
+        "matchingColumns": ["phone"],
+        "options": {}
+      },
+      "id": "sheets-update-payment",
+      "name": "Update Payment in Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1680, 140],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "REPLACE_WITH_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "messageType": "template",
+        "template": {
+          "name": "gym_payment_confirmed",
+          "language": "en",
+          "components": {
+            "values": [
+              { "type": "body", "parameters": { "values": [
+                { "type": "text", "text": "={{ $json.name }}" },
+                { "type": "text", "text": "={{ $json.amount_paid }}" },
+                { "type": "text", "text": "={{ $json.new_expiry }}" }
+              ]}}
+            ]
+          }
+        }
+      },
+      "id": "wa-payment-confirm",
+      "name": "WhatsApp Payment Confirmation",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [1920, 140],
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_CREDENTIAL_ID", "name": "WhatsApp Account" }},
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Razorpay Webhook": { "main": [[{ "node": "Is payment_link.paid?", "type": "main", "index": 0 }]] },
+    "Is payment_link.paid?": { "main": [
+      [{ "node": "Extract Payment Info", "type": "main", "index": 0 }],
+      []
+    ]},
+    "Extract Payment Info": { "main": [[{ "node": "Find Member by ID", "type": "main", "index": 0 }]] },
+    "Find Member by ID": { "main": [[{ "node": "Compute New Expiry", "type": "main", "index": 0 }]] },
+    "Compute New Expiry": { "main": [[{ "node": "Skip if Duplicate?", "type": "main", "index": 0 }]] },
+    "Skip if Duplicate?": { "main": [
+      [{ "node": "Update Payment in Sheet", "type": "main", "index": 0 }],
+      []
+    ]},
+    "Update Payment in Sheet": { "main": [[{ "node": "WhatsApp Payment Confirmation", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateId": "bl-gym-workflow-3" }
+}

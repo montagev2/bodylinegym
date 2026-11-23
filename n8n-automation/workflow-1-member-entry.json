@@ -1,0 +1,108 @@
+{
+  "name": "BL Gym - 1. Member Entry",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Body Line Fitness Center - New Member Registration",
+        "formDescription": "Register a new gym member",
+        "formFields": {
+          "values": [
+            { "fieldLabel": "Full Name", "fieldType": "text", "requiredField": true },
+            { "fieldLabel": "Phone", "fieldType": "text", "requiredField": true, "placeholder": "10-digit mobile number" },
+            { "fieldLabel": "Plan", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [
+              { "option": "Monthly" },
+              { "option": "Quarterly" },
+              { "option": "Half-yearly" },
+              { "option": "Yearly" }
+            ]}},
+            { "fieldLabel": "Fee Paid", "fieldType": "number", "requiredField": true },
+            { "fieldLabel": "Start Date", "fieldType": "text", "requiredField": true, "placeholder": "YYYY-MM-DD" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [240, 300],
+      "webhookId": "bl-gym-member-entry"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compute member_id, phone, expiry_date\nconst form = $input.first().json;\n\nconst name = (form['Full Name'] || '').trim();\nconst rawPhone = (form['Phone'] || '').replace(/[^0-9]/g, '');\nconst phone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;\nconst plan = form['Plan'] || 'Monthly';\nconst fee = parseFloat(form['Fee Paid'] || 0);\nconst startDateStr = (form['Start Date'] || new Date().toISOString().slice(0,10));\n\n// Plan -> months map\nconst planMonths = { 'Monthly': 1, 'Quarterly': 3, 'Half-yearly': 6, 'Yearly': 12 };\nconst months = planMonths[plan] || 1;\n\n// Compute expiry\nfunction addMonths(dateStr, n) {\n  const d = new Date(dateStr + 'T00:00:00');\n  d.setMonth(d.getMonth() + n);\n  return d.toISOString().slice(0,10);\n}\nconst expiryDate = addMonths(startDateStr, months);\n\n// member_id: timestamp-based\nconst memberId = 'BL' + Date.now();\n\nreturn [{\n  json: {\n    member_id: memberId,\n    name,\n    phone,\n    plan,\n    plan_months: months,\n    fee,\n    start_date: startDateStr,\n    expiry_date: expiryDate,\n    payment_status: 'Paid',\n    last_payment_date: startDateStr,\n    last_reminder_date: '',\n    last_payment_ref: memberId + '-init'\n  }\n}];\n"
+      },
+      "id": "code-compute",
+      "name": "Compute Member Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Members" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "member_id": "={{ $json.member_id }}",
+            "name": "={{ $json.name }}",
+            "phone": "={{ $json.phone }}",
+            "plan": "={{ $json.plan }}",
+            "plan_months": "={{ $json.plan_months }}",
+            "fee": "={{ $json.fee }}",
+            "start_date": "={{ $json.start_date }}",
+            "expiry_date": "={{ $json.expiry_date }}",
+            "payment_status": "={{ $json.payment_status }}",
+            "last_payment_date": "={{ $json.last_payment_date }}",
+            "last_reminder_date": "={{ $json.last_reminder_date }}",
+            "last_payment_ref": "={{ $json.last_payment_ref }}"
+          }
+        },
+        "matchingColumns": ["phone"],
+        "options": {}
+      },
+      "id": "sheets-append",
+      "name": "Save to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [720, 300],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_CREDENTIAL_ID", "name": "Google Sheets Account" }}
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "REPLACE_WITH_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "messageType": "template",
+        "template": {
+          "name": "gym_welcome",
+          "language": "en",
+          "components": {
+            "values": [
+              { "type": "body", "parameters": { "values": [
+                { "type": "text", "text": "={{ $('Compute Member Data').item.json.name }}" },
+                { "type": "text", "text": "={{ $('Compute Member Data').item.json.plan }}" },
+                { "type": "text", "text": "={{ $('Compute Member Data').item.json.expiry_date }}" }
+              ]}}
+            ]
+          }
+        }
+      },
+      "id": "wa-welcome",
+      "name": "WhatsApp Welcome Message",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [960, 300],
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_CREDENTIAL_ID", "name": "WhatsApp Account" }},
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Form Trigger": { "main": [[{ "node": "Compute Member Data", "type": "main", "index": 0 }]] },
+    "Compute Member Data": { "main": [[{ "node": "Save to Google Sheet", "type": "main", "index": 0 }]] },
+    "Save to Google Sheet": { "main": [[{ "node": "WhatsApp Welcome Message", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateId": "bl-gym-workflow-1" }
+}

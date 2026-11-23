@@ -1,0 +1,47 @@
+{
+  "name": "BL Gym - 0. Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.first().json;\nconst workflowName = err.execution?.workflowData?.name || 'Unknown Workflow';\nconst errorMessage = err.execution?.lastNodeExecuted || 'No node info';\nconst errorMsg = err.execution?.error?.message || 'Unknown error';\nconst errorTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });\n\nconst msg = `*BL Gym Automation Error Alert*\\n\\nWorkflow: ${workflowName}\\nNode: ${errorMessage}\\nError: ${errorMsg}\\nTime: ${errorTime}\\n\\nPlease check n8n dashboard.`;\n\nreturn [{ json: { alert: msg, workflow: workflowName } }];\n"
+      },
+      "id": "code-format",
+      "name": "Format Error Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL@gmail.com",
+        "subject": "=[n8n Alert] BL Gym Automation Error - {{ $json.workflow }}",
+        "emailType": "text",
+        "message": "={{ $json.alert }}"
+      },
+      "id": "gmail-alert",
+      "name": "Email Error Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [720, 300],
+      "credentials": { "gmailOAuth2": { "id": "REPLACE_CREDENTIAL_ID", "name": "Gmail Account" }}
+    }
+  ],
+  "connections": {
+    "Error Trigger": { "main": [[{ "node": "Format Error Alert", "type": "main", "index": 0 }]] },
+    "Format Error Alert": { "main": [[{ "node": "Email Error Alert", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": ""
+  },
+  "notes": "Set this as the Error Workflow in ALL other workflows: Settings > Error Workflow > select this workflow",
+  "meta": { "templateId": "bl-gym-workflow-0" }
+}

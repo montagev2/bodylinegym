@@ -1,0 +1,4 @@
+member_id,name,phone,plan,plan_months,fee,start_date,expiry_date,payment_status,last_payment_date,last_reminder_date,last_payment_ref
+BL001,Test Member One,916294902384,Monthly,1,600,2026-11-01,2026-12-01,Paid,2026-11-01,,BL001-init
+BL002,Test Member Two,919876543210,Quarterly,3,1600,2026-10-15,2027-01-15,Paid,2026-10-15,,BL002-init
+BL003,Test Member Three,918765432109,Half-yearly,6,2800,2026-05-01,2026-11-01,Pending,,,

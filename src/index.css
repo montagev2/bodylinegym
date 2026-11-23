@@ -426,3 +426,65 @@ input, textarea, select {
 .page-enter {
   animation: fadeIn 0.3s ease;
 }
+
+/* ============================================================
+   RESPONSIVE ADDITIONS — Mobile-first fixes
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .equipment-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .navbar-links {
+    display: none;
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 7vw, 3.5rem) !important;
+  }
+
+  .btn-lg {
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .container {
+    padding: 0 1rem !important;
+  }
+}

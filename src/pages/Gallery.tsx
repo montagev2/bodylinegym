@@ -87,19 +87,24 @@ export default function Gallery() {
           </div>
 
           {/* Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1rem',
-          }}>
+          <div
+            className="gallery-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1rem',
+            }}>
             {filtered.map((item, i) => {
-              const isLarge = i === 0 || i === 4
+              const gradients: Record<string, string> = {
+                equipment: 'linear-gradient(135deg, #0f0505 0%, #1a0202 50%, #0f0a00 100%)',
+                boxing: 'linear-gradient(135deg, #0a0800 0%, #1a1200 50%, #0a0500 100%)',
+                community: 'linear-gradient(135deg, #000f05 0%, #001a0a 50%, #000f05 100%)',
+              }
               return (
                 <div
                   key={item.id}
                   style={{
-                    gridColumn: isLarge ? 'span 1' : undefined,
-                    aspectRatio: isLarge ? '4/3' : '1',
+                    aspectRatio: i === 0 || i === 4 ? '4/3' : '1',
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
@@ -125,10 +130,10 @@ export default function Gallery() {
                   <div style={{
                     position: 'absolute',
                     inset: 0,
-                    background: `linear-gradient(135deg, #0f0f0f, #1a0505)`,
+                    background: gradients[item.category] ?? 'linear-gradient(135deg, #0f0f0f, #1a0505)',
                   }} />
 
-                  {/* Large placeholder text */}
+                  {/* Large placeholder icon */}
                   <div style={{
                     position: 'absolute',
                     inset: 0,
@@ -136,15 +141,16 @@ export default function Gallery() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: 'var(--font-display)',
-                    fontSize: '3rem',
+                    fontSize: '3.5rem',
                     fontWeight: 900,
-                    color: 'rgba(220,38,38,0.08)',
+                    color: `${CATEGORY_COLORS[item.category] ?? 'var(--primary)'}15`,
                     textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
                   }}>
                     {item.placeholder}
                   </div>
 
-                  {/* Category color accent */}
+                  {/* Category color accent top bar */}
                   <div style={{
                     position: 'absolute',
                     top: 0,
@@ -154,11 +160,11 @@ export default function Gallery() {
                     background: CATEGORY_COLORS[item.category] ?? 'var(--primary)',
                   }} />
 
-                  {/* Overlay on hover */}
+                  {/* Bottom label overlay */}
                   <div style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(to top, rgba(8,8,8,0.9) 0%, transparent 60%)',
+                    background: 'linear-gradient(to top, rgba(8,8,8,0.92) 0%, transparent 55%)',
                     display: 'flex',
                     alignItems: 'flex-end',
                     padding: '1rem',
