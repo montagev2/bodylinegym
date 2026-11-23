@@ -27,7 +27,7 @@ function formatDateTime(dateStr: string): string {
 }
 
 export default function MemberPortal() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, logout, loading: authLoading } = useAuth()
   const [member, setMember] = useState<GymMember | null>(null)
   const [subscriptions, setSubscriptions] = useState<GymSubscription[]>([])
   const [attendance, setAttendance] = useState<GymAttendance[]>([])
@@ -36,15 +36,17 @@ export default function MemberPortal() {
 
   useEffect(() => {
     if (!user) return
-    Promise.all([
-      getMyMember(),
-      getMySubscriptions(),
-      getMyAttendance(20),
-    ])
-      .then(([m, subs, att]) => {
+    getMyMember(user.phone)
+      .then(async m => {
         setMember(m)
-        setSubscriptions(subs)
-        setAttendance(att)
+        if (m) {
+          const [subs, att] = await Promise.all([
+            getMySubscriptions(m.id),
+            getMyAttendance(m.id, 20),
+          ])
+          setSubscriptions(subs)
+          setAttendance(att)
+        }
       })
       .catch(err => setError(err instanceof Error ? err.message : 'Failed to load data'))
       .finally(() => setLoading(false))
@@ -97,11 +99,31 @@ export default function MemberPortal() {
                 </span>
               )}
             </div>
-            {member?.status && (
-              <span className={`badge ${member.status === 'active' ? 'badge-green' : 'badge-red'}`}>
-                {member.status.toUpperCase()}
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {member?.status && (
+                <span className={`badge ${member.status === 'active' ? 'badge-green' : 'badge-red'}`}>
+                  {member.status.toUpperCase()}
+                </span>
+              )}
+              <Link to="/" className="btn btn-outline btn-sm">
+                Website
+              </Link>
+              <button
+                onClick={() => logout()}
+                style={{
+                  background: 'rgba(220, 38, 38, 0.15)',
+                  border: '1px solid rgba(220, 38, 38, 0.3)',
+                  color: 'var(--primary-light)',
+                  borderRadius: '6px',
+                  padding: '0.4rem 0.8rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </section>

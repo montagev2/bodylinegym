@@ -1,58 +1,107 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { supabase } from '../lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import type { Profile, AuthState } from '../types'
+import { verifyLogin, registerOrUpgrade } from '../lib/api'
+import { sanitisePhone, isValidPhone, isValidPin, sanitiseName } from '../lib/security'
 
-interface AuthContextType {
-  user: User | null
-  loading: boolean
-  signInWithPhone: (phone: string) => Promise<void>
-  verifyOtp: (phone: string, token: string) => Promise<void>
-  signOut: () => Promise<void>
+interface AuthContextType extends AuthState {
+  user: Profile | null // backward compatibility alias
+  login: (phone: string, pin: string) => Promise<Profile>
+  register: (phone: string, pin: string, name: string) => Promise<Profile>
+  logout: () => void
+  signOut: () => Promise<void> // backward compatibility alias
   isAdmin: boolean
+  isMember: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// Admin phone numbers (replace with actual admin phones)
-const ADMIN_PHONES = ['+916294902384']
+const STORAGE_KEY = 'bl_gym_profile'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState<AuthState>({
+    profile: null,
+    loading: true,
+    error: null,
+  })
 
+  // Restore session on mount from localStorage (Shanti Kutir pattern)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const profile = JSON.parse(raw) as Profile
+        setState({ profile, loading: false, error: null })
+      } else {
+        setState(s => ({ ...s, loading: false }))
+      }
+    } catch {
+      setState(s => ({ ...s, loading: false }))
+    }
   }, [])
 
-  const signInWithPhone = async (phone: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ phone })
-    if (error) throw error
+  const login = async (phone: string, pin: string): Promise<Profile> => {
+    const cleanPhone = sanitisePhone(phone)
+    if (!isValidPhone(cleanPhone)) throw new Error('Please enter a valid 10-digit mobile number')
+    if (!isValidPin(pin)) throw new Error('PIN must be exactly 4 digits')
+
+    setState(s => ({ ...s, loading: true, error: null }))
+    try {
+      const profile = await verifyLogin(cleanPhone, pin)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
+      setState({ profile, loading: false, error: null })
+      return profile
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Login failed'
+      setState(s => ({ ...s, loading: false, error: msg }))
+      throw err
+    }
   }
 
-  const verifyOtp = async (phone: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-    if (error) throw error
+  const register = async (phone: string, pin: string, name: string): Promise<Profile> => {
+    const cleanPhone = sanitisePhone(phone)
+    const cleanName = sanitiseName(name)
+    if (!isValidPhone(cleanPhone)) throw new Error('Please enter a valid 10-digit mobile number')
+    if (!isValidPin(pin)) throw new Error('PIN must be exactly 4 digits')
+    if (!cleanName) throw new Error('Please enter your full name')
+
+    setState(s => ({ ...s, loading: true, error: null }))
+    try {
+      const profile = await registerOrUpgrade(cleanPhone, pin, cleanName)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
+      setState({ profile, loading: false, error: null })
+      return profile
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Registration failed'
+      setState(s => ({ ...s, loading: false, error: msg }))
+      throw err
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem(STORAGE_KEY)
+    setState({ profile: null, loading: false, error: null })
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    logout()
   }
 
-  const isAdmin = user
-    ? ADMIN_PHONES.includes(user.phone ?? '') || user.email?.endsWith('@bodylinegym.in') === true
-    : false
+  const isAdmin = state.profile?.role === 'admin'
+  const isMember = state.profile?.role === 'member'
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithPhone, verifyOtp, signOut, isAdmin }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        user: state.profile,
+        login,
+        register,
+        logout,
+        signOut,
+        isAdmin,
+        isMember,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

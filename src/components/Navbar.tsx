@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const { user, signOut } = useAuth()
+  const { user, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -127,12 +127,20 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '1rem' }} className="desktop-nav">
           {user ? (
             <>
-              <Link to="/portal" className="btn btn-outline btn-sm">My Portal</Link>
+              {isAdmin ? (
+                <Link to="/admin" className="btn btn-outline btn-sm" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+                  ★ Admin Panel
+                </Link>
+              ) : (
+                <Link to="/portal" className="btn btn-outline btn-sm">
+                  My Portal
+                </Link>
+              )}
               <button onClick={handleSignOut} className="btn btn-primary btn-sm">Sign Out</button>
             </>
           ) : (
             <>
-              <Link to="/auth" className="btn btn-outline btn-sm">Member Login</Link>
+              <Link to="/auth" className="btn btn-outline btn-sm">Sign In / Admin</Link>
               <a
                 href="https://wa.me/916294902384?text=Hi!%20I'm%20interested%20in%20joining%20Body%20Line%20Fitness%20Center."
                 target="_blank"
@@ -223,12 +231,20 @@ export default function Navbar() {
           <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {user ? (
               <>
-                <Link to="/portal" onClick={() => setMenuOpen(false)} className="btn btn-outline">My Portal</Link>
+                {isAdmin ? (
+                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="btn btn-outline" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+                    ★ Admin Panel
+                  </Link>
+                ) : (
+                  <Link to="/portal" onClick={() => setMenuOpen(false)} className="btn btn-outline">
+                    My Portal
+                  </Link>
+                )}
                 <button onClick={handleSignOut} className="btn btn-primary">Sign Out</button>
               </>
             ) : (
               <>
-                <Link to="/auth" onClick={() => setMenuOpen(false)} className="btn btn-outline">Member Login</Link>
+                <Link to="/auth" onClick={() => setMenuOpen(false)} className="btn btn-outline">Sign In / Admin</Link>
                 <a
                   href="https://wa.me/916294902384?text=Hi!%20I'm%20interested%20in%20joining%20Body%20Line%20Fitness%20Center."
                   target="_blank"

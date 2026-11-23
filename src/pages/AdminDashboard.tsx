@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -25,7 +25,7 @@ function daysLeft(endDate: string) {
 }
 
 export default function AdminDashboard() {
-  const { user, isAdmin, loading: authLoading } = useAuth()
+  const { user, isAdmin, logout, loading: authLoading } = useAuth()
   const [tab, setTab] = useState<AdminTab>('overview')
   const [members, setMembers] = useState<GymMember[]>([])
   const [subscriptions, setSubscriptions] = useState<GymSubscription[]>([])
@@ -126,13 +126,71 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      {/* Header */}
-      <section style={{ background: 'var(--bg-main)', padding: '3rem 0 0', borderBottom: '1px solid var(--border)' }}>
+      {/* Master Control Top Bar (Shanti Kutir style) */}
+      <section style={{ background: 'var(--bg-main)', padding: '2rem 0 0', borderBottom: '1px solid var(--border)' }}>
         <div className="container">
-          <div className="section-label">Admin</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(1.75rem, 4vw, 3rem)', textTransform: 'uppercase', marginBottom: '2rem' }}>
-            Dashboard
-          </h1>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginBottom: '1.75rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, var(--gold) 0%, #b45309 100%)',
+                color: '#0c0b0a',
+                fontWeight: 900,
+                padding: '0.3rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontFamily: 'var(--font-display)',
+                letterSpacing: '0.08em',
+              }}>
+                ADMIN
+              </div>
+              <div>
+                <h1 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900,
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2.25rem)',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.1,
+                  margin: 0,
+                }}>
+                  Body Line Master Control
+                </h1>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Gym Management & Operations
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--gold)', fontWeight: 700 }}>
+                {user?.name || user?.phone}
+              </span>
+              <Link to="/" className="btn btn-outline btn-sm">
+                Front Website
+              </Link>
+              <button
+                onClick={() => logout()}
+                style={{
+                  background: 'rgba(220, 38, 38, 0.15)',
+                  border: '1px solid rgba(220, 38, 38, 0.3)',
+                  color: 'var(--primary-light)',
+                  borderRadius: '6px',
+                  padding: '0.4rem 0.85rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: '0.25rem', overflowX: 'auto' }}>
             {TABS.map(t => (

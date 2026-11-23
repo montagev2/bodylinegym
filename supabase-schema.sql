@@ -163,3 +163,76 @@ CREATE POLICY "gym_subscriptions_own_read" ON public.gym_subscriptions
 -- Members can view their own attendance
 CREATE POLICY "gym_attendance_own_read" ON public.gym_attendance
   FOR SELECT USING (member_id IN (SELECT id FROM public.gym_members WHERE user_id = auth.uid()));
+
+-- ============================================================
+-- AUTHENTICATION & PROFILES (Shanti Kutir style Phone + PIN)
+-- ============================================================
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS public.gym_profiles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone text UNIQUE NOT NULL,
+  pin_hash text NOT NULL,
+  name text NOT NULL,
+  role text NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'trainer', 'admin')),
+  last_active timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS gym_profiles_phone_idx ON public.gym_profiles(phone);
+
+ALTER TABLE public.gym_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "gym_profiles_public_read" ON public.gym_profiles FOR SELECT USING (true);
+
+-- Verify Login by Phone + 4-digit PIN
+CREATE OR REPLACE FUNCTION public.verify_gym_login(p_phone text, p_pin text)
+RETURNS TABLE(id uuid, phone text, name text, role text, created_at timestamptz)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  RETURN QUERY
+  SELECT pr.id, pr.phone, pr.name, pr.role, pr.created_at
+  FROM public.gym_profiles pr
+  WHERE pr.phone = p_phone
+    AND pr.pin_hash = crypt(p_pin, pr.pin_hash);
+
+  UPDATE public.gym_profiles
+  SET last_active = now()
+  WHERE phone = p_phone
+    AND pin_hash = crypt(p_pin, pin_hash);
+END;
+$$;
+
+-- Register or Upgrade Gym Member
+CREATE OR REPLACE FUNCTION public.register_gym_member(
+  p_phone text,
+  p_pin   text,
+  p_name  text
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_hash text;
+  v_id   uuid;
+  v_role text;
+BEGIN
+  v_hash := crypt(p_pin, gen_salt('bf'));
+
+  INSERT INTO public.gym_profiles (phone, pin_hash, name, role)
+  VALUES (p_phone, v_hash, p_name, 'member')
+  ON CONFLICT (phone) DO UPDATE
+    SET pin_hash = EXCLUDED.pin_hash,
+        name     = EXCLUDED.name,
+        last_active = now()
+  RETURNING id, role INTO v_id, v_role;
+
+  RETURN jsonb_build_object('id', v_id, 'phone', p_phone, 'name', p_name, 'role', v_role);
+END;
+$$;
+
+-- Seed Master Admin (Owner phone: 6294902384, PIN: 1234)
+INSERT INTO public.gym_profiles (phone, pin_hash, name, role)
+VALUES ('6294902384', crypt('1234', gen_salt('bf')), 'Body Line Master Admin', 'admin')
+ON CONFLICT (phone) DO UPDATE
+  SET pin_hash = EXCLUDED.pin_hash,
+      role = 'admin';

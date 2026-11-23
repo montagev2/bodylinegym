@@ -112,11 +112,28 @@ export interface GymGallery {
   created_at: string
 }
 
-// Auth
+// Auth & Profile (Shanti Kutir style Phone + PIN)
+export type UserRole = 'admin' | 'trainer' | 'member'
+
+export interface Profile {
+  id: string
+  phone: string
+  name: string
+  role: UserRole
+  created_at: string
+}
+
+export interface AuthState {
+  profile: Profile | null
+  loading: boolean
+  error: string | null
+}
+
 export interface AuthUser {
   id: string
   phone: string
-  email?: string
+  name?: string
+  role?: UserRole
 }
 
 // UI State
