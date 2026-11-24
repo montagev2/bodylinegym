@@ -421,10 +421,10 @@ export default function Home() {
             }}
           >
             {[
-              { name: 'Monthly', price: '600', duration: '1 Month', popular: false },
-              { name: 'Quarterly', price: '1,600', duration: '3 Months', popular: false },
-              { name: 'Half-Yearly', price: '2,800', duration: '6 Months', popular: true },
-              { name: 'Annual', price: '5,000', duration: '12 Months', popular: false },
+              { name: 'Monthly', slug: 'monthly', price: '600', duration: '1 Month', popular: false },
+              { name: 'Quarterly', slug: 'quarterly', price: '1,600', duration: '3 Months', popular: false },
+              { name: 'Half-Yearly', slug: 'half-yearly', price: '2,800', duration: '6 Months', popular: true },
+              { name: 'Annual', slug: 'annual', price: '5,000', duration: '12 Months', popular: false },
             ].map(plan => (
               <div
                 key={plan.name}
@@ -470,11 +470,11 @@ export default function Home() {
                   </span>
                 </div>
                 <Link
-                  to="/membership"
+                  to={`/membership?plan=${plan.slug}`}
                   className={plan.popular ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
-                  style={{ width: '100%', marginTop: 'auto', textAlign: 'center' }}
+                  style={{ width: '100%', marginTop: 'auto', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}
                 >
-                  View Details
+                  Buy {plan.name} Pass
                 </Link>
               </div>
             ))}

@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import CheckoutModal from '../components/CheckoutModal'
 import { getPlans } from '../lib/api'
-import { BUSINESS, PLAN_NOTE } from '../lib/business'
+import { BUSINESS } from '../lib/business'
 import type { GymPlan } from '../types'
 
 const POPULAR_SLUG = 'half-yearly'
 
-function PlanCard({ plan }: { plan: GymPlan }) {
+interface PlanCardProps {
+  plan: GymPlan
+  onBuy: (plan: GymPlan) => void
+}
+
+function PlanCard({ plan, onBuy }: PlanCardProps) {
   const isPopular = plan.slug === POPULAR_SLUG
   const whatsappMsg = encodeURIComponent(
-    `Hi! I'm interested in the ${plan.name} membership (₹${plan.price}) at Body Line Fitness Center, Nandakumar. Please share how to get started.`
+    `Hi! I have a question about the ${plan.name} membership (₹${plan.price}) at Body Line Fitness Center, Nandakumar.`
   )
 
   return (
@@ -23,6 +30,7 @@ function PlanCard({ plan }: { plan: GymPlan }) {
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
+        boxShadow: isPopular ? '0 12px 32px rgba(225, 29, 72, 0.15)' : 'none',
       }}
     >
       {isPopular && (
@@ -42,6 +50,7 @@ function PlanCard({ plan }: { plan: GymPlan }) {
             padding: '0.25rem 0.85rem',
             borderRadius: '9999px',
             whiteSpace: 'nowrap',
+            boxShadow: '0 4px 12px rgba(225, 29, 72, 0.4)',
           }}
         >
           Most Popular Plan
@@ -134,23 +143,55 @@ function PlanCard({ plan }: { plan: GymPlan }) {
         ))}
       </ul>
 
-      {/* CTA Button */}
+      {/* Primary Action: Direct Buy/Subscribe */}
+      <button
+        type="button"
+        onClick={() => onBuy(plan)}
+        className={isPopular ? 'btn btn-primary' : 'btn btn-outline'}
+        style={{
+          width: '100%',
+          textAlign: 'center',
+          padding: '0.9rem 1rem',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-display)',
+          fontWeight: 900,
+          fontSize: '0.98rem',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          border: isPopular ? 'none' : '1.5px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        {plan.slug === 'personal-training' ? 'Buy PT Coaching Pass' : `Buy ${plan.name} Pass`}
+      </button>
+
+      {/* Secondary Action: WhatsApp inquiry for questions */}
       <a
         href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${whatsappMsg}`}
         target="_blank"
         rel="noopener noreferrer"
-        className={isPopular ? 'btn btn-primary' : 'btn btn-outline'}
-        style={{ width: '100%', textAlign: 'center', padding: '0.85rem 1rem' }}
+        style={{
+          display: 'block',
+          marginTop: '0.75rem',
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+          textDecoration: 'none',
+          transition: 'color 0.15s ease',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.color = '#4ade80')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
       >
-        {plan.slug === 'personal-training' ? 'Book Personal Training' : 'Enroll on WhatsApp'}
+        💬 Have questions? Inquire on WhatsApp
       </a>
     </div>
   )
 }
 
 export default function Membership() {
+  const [searchParams] = useSearchParams()
   const [plans, setPlans] = useState<GymPlan[]>([])
   const [loading, setLoading] = useState(true)
+  const [checkoutPlan, setCheckoutPlan] = useState<GymPlan | null>(null)
 
   const fallbackPlans: GymPlan[] = [
     { id: '1', name: 'Monthly', slug: 'monthly', duration_months: 1, price: 600, admission_fee: 500, features: ['Full gym & weights access', 'Locker room & washroom', 'Cardio & HIIT zone', '24/7 flexible access'], is_active: true, sort_order: 1, created_at: '' },
@@ -162,15 +203,35 @@ export default function Membership() {
 
   useEffect(() => {
     getPlans()
-      .then(data => setPlans(data.length > 0 ? data : fallbackPlans))
+      .then(data => {
+        const activePlans = data.length > 0 ? data : fallbackPlans
+        setPlans(activePlans)
+
+        // Check if query parameter has a requested plan: e.g. /membership?plan=half-yearly
+        const requestedSlug = searchParams.get('plan')
+        if (requestedSlug) {
+          const matched = activePlans.find(p => p.slug === requestedSlug)
+          if (matched) {
+            setCheckoutPlan(matched)
+          }
+        }
+      })
       .catch(() => setPlans(fallbackPlans))
       .finally(() => setLoading(false))
-  }, [])
+  }, [searchParams])
 
   const displayPlans = plans.length > 0 ? plans : fallbackPlans
 
   return (
     <Layout>
+      {/* Checkout Modal */}
+      {checkoutPlan && (
+        <CheckoutModal
+          plan={checkoutPlan}
+          onClose={() => setCheckoutPlan(null)}
+        />
+      )}
+
       {/* Clean Hero */}
       <section
         style={{
@@ -185,7 +246,7 @@ export default function Membership() {
             Transparent Plans
           </h1>
           <p className="section-subtitle">
-            No lock-in contracts, no surprise fees. Straightforward training plans built for every budget in Nandakumar.
+            No lock-in contracts, no surprise fees. Straightforward training plans with instant online subscription &amp; UPI activation.
           </p>
         </div>
       </section>
@@ -206,7 +267,7 @@ export default function Membership() {
               }}
             >
               {displayPlans.map(plan => (
-                <PlanCard key={plan.id} plan={plan} />
+                <PlanCard key={plan.id} plan={plan} onBuy={p => setCheckoutPlan(p)} />
               ))}
             </div>
           )}
@@ -214,62 +275,29 @@ export default function Membership() {
           <div
             style={{
               marginTop: '2.5rem',
-              padding: '1rem 1.25rem',
-              borderRadius: '10px',
+              padding: '1.25rem 1.5rem',
+              borderRadius: '12px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border)',
-              textAlign: 'center',
-              color: 'var(--text-muted)',
-              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
             }}
           >
-            {PLAN_NOTE} · For custom group packages or personal training inquiries, chat directly with us on WhatsApp or call <a href={`tel:${BUSINESS.phoneRaw}`} style={{ color: '#ffffff', textDecoration: 'underline' }}>{BUSINESS.phone}</a>.
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison Overview */}
-      <section className="section" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
-        <div className="container">
-          <div className="section-header text-center">
-            <div className="section-label">All-Inclusive</div>
-            <h2 className="section-title">What Every Member Gets</h2>
-            <p className="section-subtitle" style={{ margin: '0 auto' }}>
-              Every active membership gives you complete access to all training facilities.
-            </p>
-          </div>
-
-          <div className="grid-3" style={{ maxWidth: '960px', margin: '0 auto' }}>
-            {[
-              { title: '24/7 Access', desc: 'Work out on your time, morning or night, with full facility access.' },
-              { title: 'Free Weights & Machines', desc: 'Olympic barbells, dumbbells up to 40kg, benches, and isolation cables.' },
-              { title: 'Boxing Station', desc: 'Heavy leather bags for cardio boxing, kickboxing conditioning, and stress relief.' },
-              { title: 'Locker & Clean Space', desc: 'Clean washrooms, personal cubbies, and well-ventilated training floor.' },
-              { title: 'Trainer Support', desc: 'Guidance on correct lifting form, machine adjustments, and basic routine setup.' },
-              { title: 'Progress Tracking', desc: 'Weight and body measurement check-ins to keep you accountable.' },
-            ].map(item => (
-              <div
-                key={item.title}
-                className="card"
-                style={{ padding: '1.5rem', borderRadius: '12px' }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 800,
-                    fontSize: '1.15rem',
-                    textTransform: 'uppercase',
-                    color: '#ffffff',
-                    marginBottom: '0.35rem',
-                  }}
-                >
-                  {item.title}
-                </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
-                  {item.desc}
-                </p>
-              </div>
-            ))}
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+              <strong style={{ color: '#ffffff' }}>Instant Digital Member Pass:</strong> When you buy online, your digital member pass is activated immediately in your portal with UPI or Cash reservation.
+            </div>
+            <a
+              href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent("Hi! I'd like to ask a custom question about Body Line Fitness Center.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline btn-sm"
+              style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
+            >
+              Chat With Desk
+            </a>
           </div>
         </div>
       </section>

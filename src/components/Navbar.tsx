@@ -141,14 +141,12 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/auth" className="btn btn-outline btn-sm">Sign In / Admin</Link>
-              <a
-                href="https://wa.me/916294902384?text=Hi!%20I'm%20interested%20in%20joining%20Body%20Line%20Fitness%20Center."
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/membership"
                 className="btn btn-primary btn-sm"
               >
                 Join Now
-              </a>
+              </Link>
             </>
           )}
         </div>
@@ -245,15 +243,13 @@ export default function Navbar() {
             ) : (
               <>
                 <Link to="/auth" onClick={() => setMenuOpen(false)} className="btn btn-outline">Sign In / Admin</Link>
-                <a
-                  href="https://wa.me/916294902384?text=Hi!%20I'm%20interested%20in%20joining%20Body%20Line%20Fitness%20Center."
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to="/membership"
                   className="btn btn-primary"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Join Now on WhatsApp
-                </a>
+                  Buy Membership / Join
+                </Link>
               </>
             )}
           </div>
