@@ -665,12 +665,28 @@ export async function addMember(payload: Partial<GymMember>): Promise<GymMember>
   return newMember
 }
 
-export async function addSubscription(payload: Partial<GymSubscription>): Promise<GymSubscription> {
+export async function addSubscription(payload: Partial<GymSubscription> & { admission_fee_paid?: number }): Promise<GymSubscription> {
+  // Build insert payload with Razorpay-ready fields
+  const insertPayload = {
+    member_id: payload.member_id,
+    plan_id: payload.plan_id,
+    start_date: payload.start_date,
+    end_date: payload.end_date,
+    amount_paid: payload.amount_paid,
+    payment_method: payload.payment_method || 'cash',
+    payment_status: payload.payment_status || 'paid',
+    payment_provider: payload.payment_method === 'razorpay' ? 'razorpay' : null,
+    transaction_ref: payload.transaction_ref || null,
+    renewed_from: payload.renewed_from || null,
+    notes: payload.notes || null,
+    created_by: payload.created_by || 'Admin',
+  }
+
   try {
     const { data, error } = await supabase
       .from('gym_subscriptions')
-      .insert(payload)
-      .select()
+      .insert(insertPayload)
+      .select('*, plan:gym_plans(*), member:gym_members(*)')
       .single()
     if (!error && data) return data
   } catch {
@@ -686,14 +702,63 @@ export async function addSubscription(payload: Partial<GymSubscription>): Promis
     end_date: payload.end_date || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
     amount_paid: payload.amount_paid || plan.price,
     payment_method: payload.payment_method || 'cash',
-    payment_status: 'paid',
+    payment_status: payload.payment_status || 'paid',
     transaction_ref: payload.transaction_ref || null,
     renewed_from: null,
     notes: payload.notes || 'Created via Admin',
-    created_by: 'Admin',
+    created_by: payload.created_by || 'Admin',
     created_at: new Date().toISOString(),
     plan,
   }
+}
+
+export async function updateSubscriptionPayment(
+  id: string,
+  status: GymSubscription['payment_status'],
+  ref?: string
+): Promise<void> {
+  try {
+    await supabase.from('gym_subscriptions').update({
+      payment_status: status,
+      transaction_ref: ref ?? null,
+    }).eq('id', id)
+  } catch {
+    // ignore
+  }
+}
+
+export async function updateMemberStatus(
+  id: string,
+  status: GymMember['status']
+): Promise<void> {
+  try {
+    await supabase.from('gym_members').update({ status }).eq('id', id)
+  } catch {
+    // ignore
+  }
+}
+
+export async function getTodayRevenue(): Promise<{ cash: number; upi: number; total: number; count: number }> {
+  const today = new Date().toISOString().split('T')[0]
+  try {
+    const { data, error } = await supabase
+      .from('gym_subscriptions')
+      .select('amount_paid, payment_method')
+      .gte('created_at', today + 'T00:00:00Z')
+      .eq('payment_status', 'paid')
+    if (!error && data) {
+      const cash = data.filter(s => s.payment_method === 'cash').reduce((a, s) => a + Number(s.amount_paid), 0)
+      const upi = data.filter(s => s.payment_method !== 'cash').reduce((a, s) => a + Number(s.amount_paid), 0)
+      return { cash, upi, total: cash + upi, count: data.length }
+    }
+  } catch { /* fallback */ }
+  return { cash: 0, upi: 0, total: 0, count: 0 }
+}
+
+export async function markAttendance(memberId: string, method: GymAttendance['method'] = 'manual'): Promise<void> {
+  try {
+    await supabase.from('gym_attendance').insert({ member_id: memberId, method })
+  } catch { /* ignore */ }
 }
 
 export async function updateInquiryStatus(id: string, status: GymInquiry['status']): Promise<void> {

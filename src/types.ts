@@ -41,10 +41,17 @@ export interface GymSubscription {
   start_date: string
   end_date: string
   amount_paid: number
-  payment_method: 'cash' | 'upi' | 'card' | 'bank_transfer' | 'other'
+  admission_fee_paid?: number
+  payment_method: 'cash' | 'upi' | 'card' | 'bank_transfer' | 'razorpay' | 'other'
   payment_status: 'paid' | 'pending' | 'failed' | 'refunded'
+  payment_provider?: string | null
+  razorpay_order_id?: string | null
+  razorpay_payment_id?: string | null
+  razorpay_signature?: string | null
   transaction_ref: string | null
   renewed_from: string | null
+  is_frozen?: boolean
+  frozen_days?: number
   notes: string | null
   created_by: string | null
   created_at: string

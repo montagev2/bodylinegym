@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { DynamicIslandProvider } from './components/DynamicIsland'
 import Home from './pages/Home'
 import Membership from './pages/Membership'
 import Trainers from './pages/Trainers'
@@ -10,16 +11,12 @@ import Auth from './pages/Auth'
 import MemberPortal from './pages/MemberPortal'
 import AdminDashboard from './pages/AdminDashboard'
 
-function ScrollToTop() {
-  // Scroll to top on route change
-  return null
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ScrollToTop />
+        {/* Global Dynamic Island — renders on top of everything */}
+        <DynamicIslandProvider />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/membership" element={<Membership />} />
@@ -30,7 +27,6 @@ export default function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/portal" element={<MemberPortal />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          {/* Catch-all */}
           <Route path="*" element={<Home />} />
         </Routes>
       </AuthProvider>
