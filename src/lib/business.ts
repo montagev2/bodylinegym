@@ -15,6 +15,7 @@ export const BUSINESS = {
   reviewCount: 9,
   mapsUrl: 'https://maps.app.goo.gl/Jd2YLd5KgyYTxBF26',
   mapsEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3706.433456789!2d87.92041!3d22.20033!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDEyJzAxLjIiTiA4N8KwNTUnMTMuNSJF!5e0!3m2!1sen!2sin!4v1234567890',
+  mapsEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3706.433456789!2d87.92041!3d22.20033!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDEyJzAxLjIiTiA4N8KwNTUnMTMuNSJF!5e0!3m2!1sen!2sin!4v1234567890',
   plusCode: '6W2F+45 Nandakumar, West Bengal',
   established: '2020',
   features: [

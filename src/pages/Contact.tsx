@@ -9,9 +9,8 @@ type InquiryType = GymInquiry['inquiry_type']
 const INQUIRY_TYPES: { value: InquiryType; label: string }[] = [
   { value: 'membership', label: 'Membership Inquiry' },
   { value: 'trial', label: 'Book Free Trial' },
-  { value: 'personal_training', label: 'Personal Training' },
+  { value: 'personal_training', label: 'Personal Coaching' },
   { value: 'general', label: 'General Question' },
-  { value: 'other', label: 'Other' },
 ]
 
 export default function Contact() {
@@ -41,7 +40,7 @@ export default function Contact() {
       setForm({ full_name: '', phone: '', email: '', message: '', inquiry_type: 'membership' })
     } catch (err) {
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to submit. Please try WhatsApp instead.')
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to submit. Please chat on WhatsApp directly.')
     }
   }
 
@@ -50,116 +49,108 @@ export default function Contact() {
   return (
     <Layout>
       {/* Hero */}
-      <section style={{
-        background: 'var(--bg-main)',
-        padding: '5rem 0 3rem',
-        borderBottom: '1px solid var(--border)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-          opacity: 0.2,
-        }} />
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="section-label">Get in Touch</div>
-          <h1 className="section-title" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>Contact Us</h1>
+      <section
+        style={{
+          background: 'linear-gradient(to bottom, #121215, #09090b)',
+          padding: '4rem 0 2.5rem',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div className="container">
+          <div className="section-label">Connect with Us</div>
+          <h1 className="section-title" style={{ fontSize: 'clamp(2.25rem, 6vw, 4rem)' }}>
+            Contact &amp; Location
+          </h1>
           <p className="section-subtitle">
-            Have questions? Ready to join? We respond fast — or just WhatsApp us directly.
+            Have questions about our plans or want to tour the facility? Drop in anytime or send a quick WhatsApp.
           </p>
         </div>
       </section>
 
       <section className="section">
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }}>
-
-            {/* Contact Info */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '3rem',
+              alignItems: 'start',
+            }}
+            className="contact-layout"
+          >
+            {/* Left: Contact Details */}
             <div>
-              <h2 style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 900,
-                fontSize: '2rem',
-                textTransform: 'uppercase',
-                marginBottom: '2rem',
-              }}>
-                Find Us
+              <h2
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900,
+                  fontSize: '1.8rem',
+                  textTransform: 'uppercase',
+                  color: '#ffffff',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                Gym Information
               </h2>
 
-              {/* Info blocks */}
-              {[
-                {
-                  label: 'Phone',
-                  content: (
-                    <a href={`tel:${BUSINESS.phoneRaw}`} style={{ color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 600, textDecoration: 'none' }}>
-                      {BUSINESS.phone}
-                    </a>
-                  ),
-                },
-                {
-                  label: 'Hours',
-                  content: <span style={{ color: '#4ade80', fontWeight: 600, fontSize: '1.1rem' }}>{BUSINESS.hours}</span>,
-                },
-                {
-                  label: 'Address',
-                  content: (
-                    <a href={BUSINESS.mapsUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none', lineHeight: 1.7 }}>
-                      {BUSINESS.address}
-                    </a>
-                  ),
-                },
-                {
-                  label: 'Plus Code',
-                  content: <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{BUSINESS.plusCode}</span>,
-                },
-              ].map(({ label, content }) => (
-                <div key={label} style={{
-                  display: 'flex',
-                  gap: '1.25rem',
-                  marginBottom: '1.75rem',
-                  paddingBottom: '1.75rem',
-                  borderBottom: '1px solid var(--border)',
-                }}>
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    background: 'rgba(220,38,38,0.1)',
-                    border: '1px solid rgba(220,38,38,0.2)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 800,
-                    fontSize: '0.6rem',
-                    color: 'var(--primary)',
-                    letterSpacing: '0.03em',
-                    textTransform: 'uppercase',
-                  }}>
-                    {label.slice(0, 2)}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+                <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem', fontWeight: 700 }}>
+                    Direct Phone / WhatsApp
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.4rem' }}>
-                      {label}
-                    </div>
-                    {content}
+                  <a
+                    href={`tel:${BUSINESS.phoneRaw}`}
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 800,
+                      fontSize: '1.5rem',
+                      color: '#ffffff',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {BUSINESS.phone}
+                  </a>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Available on Call &amp; WhatsApp 24/7
                   </div>
                 </div>
-              ))}
 
-              {/* Quick actions */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem', fontWeight: 700 }}>
+                    Opening Hours
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.3rem', color: '#4ade80' }}>
+                    Open 24 Hours · Every Day
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Coached Batches: Morning 5:00 AM – 9:30 AM | Evening 4:30 PM – 9:30 PM
+                  </div>
+                </div>
+
+                <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem', fontWeight: 700 }}>
+                    Gym Location
+                  </div>
+                  <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.5 }}>
+                    {BUSINESS.address}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    Landmark: Near Basudevpur Maharaj High School &amp; Jana Steel Furnitures
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
                 <a
-                  href={`https://wa.me/${BUSINESS.whatsappNumber}?text=Hi!%20I%27m%20interested%20in%20joining%20Body%20Line%20Fitness%20Center.`}
+                  href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent(
+                    "Hi! I'd like to ask a question about Body Line Fitness Center, Nandakumar."
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
                 >
-                  Chat on WhatsApp
+                  WhatsApp Direct
                 </a>
                 <a
                   href={BUSINESS.mapsUrl}
@@ -167,159 +158,142 @@ export default function Contact() {
                   rel="noopener noreferrer"
                   className="btn btn-outline"
                 >
-                  Get Directions on Maps
+                  Get Directions
                 </a>
               </div>
 
-              {/* Map embed */}
-              <div style={{ marginTop: '2rem', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+              {/* Map Embed */}
+              <div
+                style={{
+                  borderRadius: '14px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border)',
+                  aspectRatio: '16/10',
+                  background: 'var(--bg-card)',
+                }}
+              >
                 <iframe
                   title="Body Line Fitness Center Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3706.4!2d87.9204!3d22.2003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02cdd879999999%3A0x9!2sBody+Line+Fitness+Center!5e0!3m2!1sen!2sin!4v1234567890"
+                  src={BUSINESS.mapsEmbedUrl}
                   width="100%"
-                  height="260"
-                  style={{ border: 0, display: 'block', filter: 'invert(0.9) hue-rotate(180deg)' }}
-                  allowFullScreen
+                  height="100%"
+                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) contrast(1.1)' }}
+                  allowFullScreen={false}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
             </div>
 
-            {/* Contact Form */}
+            {/* Right: Message Form */}
             <div>
-              <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '2.5rem',
-              }}>
-                <h2 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 900,
-                  fontSize: '1.75rem',
-                  textTransform: 'uppercase',
-                  marginBottom: '0.5rem',
-                }}>
+              <div
+                className="card"
+                style={{
+                  padding: '2.25rem 2rem',
+                  borderRadius: '16px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 900,
+                    fontSize: '1.6rem',
+                    textTransform: 'uppercase',
+                    color: '#ffffff',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   Send a Message
                 </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
-                  We'll get back to you within a few hours.
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.75rem' }}>
+                  Leave your number and what you need — we will call or text you on WhatsApp within a few hours.
                 </p>
 
                 {status === 'success' ? (
-                  <div style={{
-                    padding: '2rem',
-                    background: 'rgba(34,197,94,0.08)',
-                    border: '1px solid rgba(34,197,94,0.25)',
-                    borderRadius: '8px',
-                    textAlign: 'center',
-                  }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{'✓'}</div>
-                    <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', textTransform: 'uppercase', color: '#4ade80', marginBottom: '0.5rem' }}>
+                  <div
+                    style={{
+                      padding: '1.5rem',
+                      borderRadius: '10px',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      color: '#4ade80',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '0.35rem' }}>
                       Message Received!
-                    </h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                      We'll contact you at {form.phone || 'your number'} shortly. For faster response, WhatsApp us directly.
+                    </div>
+                    <p style={{ fontSize: '0.85rem', margin: 0, color: 'var(--text-secondary)' }}>
+                      Thank you! Our trainer or manager will reach out to your mobile number shortly.
                     </p>
-                    <button onClick={() => setStatus('idle')} className="btn btn-outline" style={{ marginTop: '1.5rem', fontSize: '0.85rem' }}>
-                      Send Another
-                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    {/* Inquiry type */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                        Type of Inquiry
-                      </label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {INQUIRY_TYPES.map(type => (
-                          <button
-                            key={type.value}
-                            type="button"
-                            onClick={() => update('inquiry_type', type.value)}
-                            style={{
-                              padding: '0.4rem 0.875rem',
-                              borderRadius: '6px',
-                              border: `1px solid ${form.inquiry_type === type.value ? 'var(--primary)' : 'var(--border)'}`,
-                              background: form.inquiry_type === type.value ? 'rgba(220,38,38,0.12)' : 'var(--bg-elevated)',
-                              color: form.inquiry_type === type.value ? 'var(--primary)' : 'var(--text-secondary)',
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.15s',
-                            }}
-                          >
-                            {type.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                        Full Name *
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem', fontWeight: 700 }}>
+                        Your Full Name *
                       </label>
                       <input
                         className="input"
                         type="text"
                         value={form.full_name}
                         onChange={e => update('full_name', e.target.value)}
-                        placeholder="Your full name"
+                        placeholder="e.g. Rahul Sen"
                         required
                       />
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                        Phone Number *
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem', fontWeight: 700 }}>
+                        Mobile Number (WhatsApp Preferred) *
                       </label>
                       <input
                         className="input"
                         type="tel"
                         value={form.phone}
                         onChange={e => update('phone', e.target.value)}
-                        placeholder="+91 XXXXX XXXXX"
+                        placeholder="10-digit mobile number"
                         required
                       />
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                        Email (optional)
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem', fontWeight: 700 }}>
+                        What Are You Interested In?
                       </label>
-                      <input
+                      <select
                         className="input"
-                        type="email"
-                        value={form.email}
-                        onChange={e => update('email', e.target.value)}
-                        placeholder="you@example.com"
-                      />
+                        value={form.inquiry_type}
+                        onChange={e => update('inquiry_type', e.target.value)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {INQUIRY_TYPES.map(t => (
+                          <option key={t.value} value={t.value} style={{ background: '#121215', color: '#ffffff' }}>
+                            {t.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                        Message (optional)
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem', fontWeight: 700 }}>
+                        Optional Note / Message
                       </label>
                       <textarea
                         className="input"
+                        rows={3}
                         value={form.message}
                         onChange={e => update('message', e.target.value)}
-                        placeholder="Tell us your fitness goals or any specific questions..."
-                        rows={4}
-                        style={{ resize: 'vertical', minHeight: '100px' }}
+                        placeholder="e.g. What is the fee for evening weight training batch?"
+                        style={{ resize: 'vertical' }}
                       />
                     </div>
 
                     {status === 'error' && (
-                      <div style={{
-                        padding: '0.875rem',
-                        background: 'rgba(220,38,38,0.08)',
-                        border: '1px solid rgba(220,38,38,0.25)',
-                        borderRadius: '6px',
-                        color: 'var(--primary-light)',
-                        fontSize: '0.85rem',
-                      }}>
+                      <div style={{ color: 'var(--primary-light)', fontSize: '0.85rem' }}>
                         {errorMsg}
                       </div>
                     )}
@@ -328,27 +302,26 @@ export default function Contact() {
                       type="submit"
                       disabled={status === 'submitting'}
                       className="btn btn-primary"
-                      style={{ opacity: status === 'submitting' ? 0.7 : 1 }}
+                      style={{ width: '100%', minHeight: '48px', fontSize: '0.95rem' }}
                     >
-                      {status === 'submitting' ? 'Sending...' : 'Send Message'}
+                      {status === 'submitting' ? 'Submitting...' : 'Submit Inquiry'}
                     </button>
-
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center' }}>
-                      Or reach us instantly on WhatsApp: {BUSINESS.phone}
-                    </p>
                   </form>
                 )}
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      <style>{`
-        @media (max-width: 768px) {
-          .contact-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+        <style>{`
+          @media (max-width: 860px) {
+            .contact-layout {
+              grid-template-columns: 1fr !important;
+              gap: 2.5rem !important;
+            }
+          }
+        `}</style>
+      </section>
     </Layout>
   )
 }

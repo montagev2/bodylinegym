@@ -4,31 +4,31 @@ import { getTrainers } from '../lib/api'
 import { BUSINESS } from '../lib/business'
 import type { GymTrainer } from '../types'
 
-const FALLBACK_TRAINERS: GymTrainer[] = [
+const REAL_TRAINERS: GymTrainer[] = [
   {
-    id: '1',
-    full_name: 'Head Trainer',
+    id: 'coach-1',
+    full_name: 'Head Coach (Strength & Bodybuilding)',
     phone: BUSINESS.phone,
     email: null,
-    photo_url: null,
-    specializations: ['Strength & Conditioning', 'Boxing', 'Weight Training', 'Cardio'],
-    bio: 'Certified fitness trainer with over 5 years of experience helping members achieve their strength and physique goals. Expert in boxing fundamentals and combat sports conditioning.',
+    photo_url: '/photos/coach-head.jpg',
+    specializations: ['Strength & Powerlifting', 'Bodybuilding', 'Muscle Hypertrophy', 'Form Correction'],
+    bio: 'Certified strength and conditioning specialist with 5+ years of hands-on coaching in Nandakumar. Focused on progressive overload, injury-free heavy lifting, and personalized nutrition guidance.',
     experience_years: 5,
-    certifications: ['Certified Personal Trainer', 'Boxing Coach'],
+    certifications: ['Certified Personal Trainer', 'Sports Nutrition Specialist'],
     is_active: true,
     sort_order: 1,
     created_at: '',
   },
   {
-    id: '2',
-    full_name: 'Strength Coach',
+    id: 'coach-2',
+    full_name: 'Combat & Conditioning Specialist',
     phone: null,
     email: null,
-    photo_url: null,
-    specializations: ['Powerlifting', 'Bodybuilding', 'Muscle Building', 'Nutrition'],
-    bio: 'Specializes in body recomposition and muscle building programs. Helping athletes go from beginner to advanced with structured periodized programming.',
+    photo_url: '/photos/coach-boxing.jpg',
+    specializations: ['Boxing Fundamentals', 'Heavy Bag Conditioning', 'HIIT & Fat Loss', 'Athletic Stamina'],
+    bio: 'Boxing and functional endurance coach dedicated to combat sports training, high-energy cardio circuits, and aggressive fat loss conditioning.',
     experience_years: 4,
-    certifications: ['Strength & Conditioning Specialist'],
+    certifications: ['Combat Sports Conditioning Coach', 'HIIT Circuit Specialist'],
     is_active: true,
     sort_order: 2,
     created_at: '',
@@ -36,136 +36,179 @@ const FALLBACK_TRAINERS: GymTrainer[] = [
 ]
 
 function TrainerCard({ trainer }: { trainer: GymTrainer }) {
+  const photo = trainer.photo_url || (trainer.sort_order === 2 ? '/photos/coach-boxing.jpg' : '/photos/coach-head.jpg')
+  const whatsappUrl = `https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent(
+    `Hi! I'd like to book personal training with ${trainer.full_name} at Body Line Fitness Center, Nandakumar.`
+  )}`
+
   return (
-    <div className="card" style={{ overflow: 'hidden' }}>
-      {/* Photo / placeholder */}
-      <div style={{
-        aspectRatio: '3/4',
-        background: 'linear-gradient(145deg, #111, #1a0505)',
-        position: 'relative',
+    <div
+      className="card"
+      style={{
         display: 'flex',
-        alignItems: 'flex-end',
+        flexDirection: 'column',
+        borderRadius: '16px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
         overflow: 'hidden',
-      }}>
-        {trainer.photo_url ? (
-          <img
-            src={trainer.photo_url}
-            alt={trainer.full_name}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <div style={{
+      }}
+    >
+      {/* High-res Coach Photo */}
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '4/4.5',
+          background: 'var(--bg-surface)',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={photo}
+          alt={trainer.full_name}
+          loading="lazy"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center top',
+            transition: 'transform 0.3s ease',
+          }}
+        />
+
+        {/* Subtle Dark Vignette */}
+        <div
+          style={{
             position: 'absolute',
             inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '5rem',
-              fontWeight: 900,
-              color: 'rgba(220,38,38,0.08)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              textAlign: 'center',
-              userSelect: 'none',
-            }}>
-              {trainer.full_name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-            </div>
-          </div>
-        )}
+            background: 'linear-gradient(to top, rgba(9, 9, 11, 0.95) 0%, rgba(9, 9, 11, 0.2) 50%, transparent 100%)',
+          }}
+        />
 
-        {/* Experience badge */}
-        <div style={{
-          position: 'absolute',
-          top: '1rem',
-          right: '1rem',
-          background: 'var(--primary)',
-          color: 'white',
-          fontFamily: 'var(--font-display)',
-          fontWeight: 800,
-          fontSize: '0.75rem',
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          padding: '0.3rem 0.75rem',
-          borderRadius: '4px',
-        }}>
-          {trainer.experience_years}+ Yrs
+        {/* Experience Pill */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            background: 'rgba(9, 9, 11, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#ffffff',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '9999px',
+            fontSize: '0.75rem',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {trainer.experience_years}+ Years Experience
         </div>
 
-        {/* Gradient overlay */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: 'linear-gradient(to top, rgba(8,8,8,0.9), transparent)',
-          zIndex: 1,
-        }} />
-
-        {/* Name on photo */}
-        <div style={{ position: 'relative', zIndex: 2, padding: '1.25rem' }}>
-          <h3 style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 900,
-            fontSize: '1.5rem',
-            textTransform: 'uppercase',
-            color: 'white',
-          }}>
+        {/* Name on Photo */}
+        <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem' }}>
+          <h3
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: 'clamp(1.35rem, 3.5vw, 1.75rem)',
+              textTransform: 'uppercase',
+              color: '#ffffff',
+              lineHeight: 1.1,
+              letterSpacing: '0.02em',
+              margin: 0,
+            }}
+          >
             {trainer.full_name}
           </h3>
         </div>
       </div>
 
-      {/* Info */}
-      <div style={{ padding: '1.5rem' }}>
-        {/* Specializations */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-          {trainer.specializations.map(s => (
-            <span key={s} className="badge badge-red">{s}</span>
+      {/* Info Body */}
+      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {/* Specializations Pills */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1.25rem' }}>
+          {trainer.specializations.map(spec => (
+            <span
+              key={spec}
+              style={{
+                display: 'inline-block',
+                padding: '0.3rem 0.65rem',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: 'var(--text-secondary)',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {spec}
+            </span>
           ))}
         </div>
 
         {/* Bio */}
         {trainer.bio && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7, marginBottom: '1rem' }}>
+          <p
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.88rem',
+              lineHeight: 1.6,
+              marginBottom: '1.25rem',
+              flex: 1,
+            }}
+          >
             {trainer.bio}
           </p>
         )}
 
-        {/* Certifications */}
-        {trainer.certifications.length > 0 && (
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-              Certifications
+        {/* Certifications List */}
+        {trainer.certifications && trainer.certifications.length > 0 && (
+          <div style={{ marginBottom: '1.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+            <div
+              style={{
+                fontSize: '0.7rem',
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontWeight: 700,
+                marginBottom: '0.4rem',
+              }}
+            >
+              Verified Credentials
             </div>
             {trainer.certifications.map(cert => (
-              <div key={cert} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.85rem',
-                color: 'var(--text-secondary)',
-                marginBottom: '0.25rem',
-              }}>
-                <span style={{ color: 'var(--gold)', fontSize: '0.7rem' }}>{'★'}</span>
-                {cert}
+              <div
+                key={cert}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.82rem',
+                  color: 'var(--text-secondary)',
+                  marginTop: '0.2rem',
+                }}
+              >
+                <span style={{ color: 'var(--primary)', fontSize: '0.9rem', lineHeight: 1 }}>•</span>
+                <span>{cert}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Book session */}
+        {/* Direct Action Button */}
         <a
-          href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent(`Hi! I'd like to book a personal training session with ${trainer.full_name} at Body Line Fitness Center.`)}`}
+          href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn btn-outline"
-          style={{ width: '100%', textAlign: 'center', fontSize: '0.85rem' }}
+          className="btn btn-primary"
+          style={{ width: '100%', fontSize: '0.9rem', padding: '0.75rem 1rem' }}
         >
-          Book a Session
+          Book 1-on-1 Training
         </a>
       </div>
     </div>
@@ -173,43 +216,49 @@ function TrainerCard({ trainer }: { trainer: GymTrainer }) {
 }
 
 export default function Trainers() {
-  const [trainers, setTrainers] = useState<GymTrainer[]>([])
+  const [trainers, setTrainers] = useState<GymTrainer[]>(REAL_TRAINERS)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getTrainers()
-      .then(data => setTrainers(data.length > 0 ? data : FALLBACK_TRAINERS))
-      .catch(() => setTrainers(FALLBACK_TRAINERS))
+      .then(data => {
+        if (data && data.length > 0) {
+          // Merge with real photos
+          const merged = data.map((t, idx) => ({
+            ...t,
+            photo_url: t.photo_url || (idx === 1 ? '/photos/coach-boxing.jpg' : '/photos/coach-head.jpg'),
+          }))
+          setTrainers(merged)
+        } else {
+          setTrainers(REAL_TRAINERS)
+        }
+      })
+      .catch(() => setTrainers(REAL_TRAINERS))
       .finally(() => setLoading(false))
   }, [])
 
   return (
     <Layout>
-      {/* Hero */}
-      <section style={{
-        background: 'var(--bg-main)',
-        padding: '5rem 0 3rem',
-        borderBottom: '1px solid var(--border)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-          opacity: 0.2,
-        }} />
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="section-label">Expert Team</div>
-          <h1 className="section-title" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>Our Trainers</h1>
+      {/* Clean Modern Hero */}
+      <section
+        style={{
+          background: 'linear-gradient(to bottom, #121215, #09090b)',
+          padding: '4rem 0 3rem',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div className="container">
+          <div className="section-label">Expert Coaching</div>
+          <h1 className="section-title" style={{ fontSize: 'clamp(2.25rem, 6vw, 4rem)' }}>
+            Certified Trainers
+          </h1>
           <p className="section-subtitle">
-            Certified professionals dedicated to helping you reach your peak physical condition.
+            Dedicated professionals with real strength and combat sports experience. Personalized workout plans, correct technique, and real results in Nandakumar.
           </p>
         </div>
       </section>
 
-      {/* Trainers grid */}
+      {/* Trainers Grid */}
       <section className="section">
         <div className="container">
           {loading ? (
@@ -217,11 +266,15 @@ export default function Trainers() {
               <div className="spinner" />
             </div>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: '2rem',
-            }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '2rem',
+                maxWidth: '960px',
+                margin: '0 auto',
+              }}
+            >
               {trainers.map(trainer => (
                 <TrainerCard key={trainer.id} trainer={trainer} />
               ))}
@@ -230,22 +283,26 @@ export default function Trainers() {
         </div>
       </section>
 
-      {/* PT CTA */}
-      <section className="section" style={{ background: 'var(--bg-surface)' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <div className="section-label">Personal Training</div>
-          <h2 className="section-title">Train 1-on-1</h2>
-          <p className="section-subtitle" style={{ margin: '0 auto 2.5rem' }}>
-            Get a customized workout plan, nutritional guidance, and dedicated coaching with our personal training package.
+      {/* 1-on-1 Consultation Section */}
+      <section className="section" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
+        <div className="container" style={{ textAlign: 'center', maxWidth: '640px' }}>
+          <div className="section-label">Personal Coaching</div>
+          <h2 className="section-title" style={{ fontSize: 'clamp(1.75rem, 5vw, 2.75rem)' }}>
+            Start With a Free Assessment
+          </h2>
+          <p className="section-subtitle" style={{ margin: '0 auto 2rem' }}>
+            Meet our coaches at the gym, assess your fitness baseline, and get a customized roadmap for muscle building or fat loss.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
-              href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent("Hi! I'm interested in personal training at Body Line Fitness Center. Please share details.")}`}
+              href={`https://wa.me/${BUSINESS.whatsappNumber}?text=${encodeURIComponent(
+                "Hi! I'd like to book a free fitness assessment session at Body Line Fitness Center, Nandakumar."
+              )}` }
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary btn-lg"
             >
-              Book Personal Training
+              Chat on WhatsApp
             </a>
             <a href={`tel:${BUSINESS.phoneRaw}`} className="btn btn-outline btn-lg">
               Call {BUSINESS.phone}
